@@ -1,4 +1,3 @@
-# iso-verification
 # ISO Verification Guide
 
 A practical guide to verifying Linux ISO images before and after writing them to USB.
@@ -34,7 +33,7 @@ Look for `Good signature from ...` in the output. A warning about the key not be
 ### Verify the ISO checksum
 
 ```bash
-sha256sum -c SHA256SUMS 2>&1 | grep OK
+sha256sum -c SHA256SUMS 2>&1 | grep ': OK$'
 ```
 
 If the ISO filename appears followed by `OK`, the file matches the published checksum.
@@ -57,7 +56,10 @@ sha256sum your-distro.iso
 
 ### Hash the same number of bytes from the USB
 
+Unmount the USB first, then read back the ISO-sized portion:
+
 ```bash
+sudo umount /dev/sdX1
 sudo dd if=/dev/sdX bs=1M count=$ISO_SIZE iflag=count_bytes status=none | sha256sum
 ```
 
@@ -66,6 +68,8 @@ Replace `/dev/sdX` with your USB device.
 If both hashes match, the USB is a faithful byte-for-byte copy.
 
 > **Why `count_bytes` matters:** The USB drive is larger than the ISO. Hashing the entire device would include trailing empty space and produce a different result.
+
+> **Note:** `iflag=count_bytes` requires GNU coreutils. This command will not work on macOS or other BSD-based systems.
 
 > **Note:** This method works for tools that do raw writes (`dd`, `cp`, balenaEtcher). Tools like Ventoy modify the USB structure, so a byte-for-byte comparison will not apply.
 
